@@ -1,1 +1,3 @@
-books-db/config.js
+.env
+./books-api/package-lock.json
+./books-db/package-lock.json

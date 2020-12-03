@@ -1,7 +1,9 @@
 
 const {config}  = require("./config")
-const MongoDb = require("./lib/mongo")
-const mongo = new MongoDb 
+const MongoBook = require("./lib/book_db")
+const MongoPerson = require("./lib/person_db") 
+const mongoPerson = new MongoPerson
+const mongoBook = new MongoBook
 
-module.exports = { mongo, config }
+module.exports = { mongoPerson , mongoBook, config }
 
