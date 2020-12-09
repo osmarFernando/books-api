@@ -1,7 +1,6 @@
 const { config } = require("../config")
-const { MongoClient, ObjectID, ObjectId } = require("mongodb")
+const { MongoClient} = require("mongodb")
 const uuid = require("uuid")
-const { prototype } = require("./person_db")
 const collection = "book"
 
 const USER = encodeURIComponent(config.dbUser)
@@ -49,9 +48,9 @@ class MongoBook {
     let db = await this.connect()
     if (data.year) data.year = parseInt(data.year)
     const avaible = Number("1")
-    const totalStock = 1
+    const total_stock = 1
     data.avaible = avaible
-    data.totalStock = totalStock
+    data.totalStock = total_stock
     data.book_id = (`${uuid.v4().substr(10)}`).replace(/-/g, '')
     let dbList = await db.collection(collection).insertOne(data)
     return dbList

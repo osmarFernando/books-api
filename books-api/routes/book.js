@@ -23,12 +23,23 @@ const upload = multer({
 })
 
 //joi validations
+const searchSchema = joi.object({
+    name: joi.string(),
+    author: joi.string(),
+    editorial: joi.string(),
+    year: joi.number(),
+    genre: joi.string(),
+    avaible: joi.string(),
+    totalStock: joi.string(),
+    book_id: joi.string()
+})
+
 const createSchema = joi.object({
     name: joi.string().min(1).max(100).required().strict(),
     author: joi.string().min(1).max(100).required().strict(),
     editorial: joi.string().min(1).max(50).strict(),
     year: joi.number().integer().min(1950).max(2021),
-    gender: joi.string().min(2).max(50).regex(/^[a-zA-Z]+$/).strict()
+    genre: joi.string().min(2).max(50).regex(/^[a-zA-Z]+$/).strict()
 })
 
 const updateSchema = joi.object({
@@ -36,13 +47,15 @@ const updateSchema = joi.object({
     author: joi.string().min(1).max(100).strict(),
     editorial: joi.string().min(1).max(50).strict(),
     year: joi.number().integer().min(1950).max(2021).strict(),
-    gender: joi.string().min(2).max(50),
+    genre: joi.string().min(2).max(50),
     book_id: joi.string()
 })
 
 route.post("/", async (req, res, next) => {
     try {
         const { body } = req
+        const validate = searchSchema.validate(body)
+        if (validate.error) return res.status(400).send({ message: validate.error.details[0].message })
         const search = await mongoBook.searchBook(body)
         if (search.length === 0) return res.status(404).json({ message: "book not found" })
         return res.status(200).json({ books: search, mesagge: "book retrived" })
@@ -98,7 +111,7 @@ route.put("/", async (req, res, next) => {
         const search = await mongoBook.searchBook({ book_id: body.book_id })
         if (search.length === 0) return res.status(404).json({ mesagge: "Book not found" })
         let validate = await updateSchema.validate(body)
-        if (validate.error) return res.status(400).send({message: validate.error.details[0].message })
+        if (validate.error) return res.status(400).send({ message: validate.error.details[0].message })
         await mongoBook.updateBook({ book_id: body.book_id }, body)
         return res.status(200).json({ mesagge: "Book updated" })
     } catch (error) {

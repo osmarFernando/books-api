@@ -34,10 +34,7 @@ class MongoPerson {
     if (data.lastname) filter.lastname = RegExp(data.lastname, "i")
     if (data.curp) filter.curp = RegExp(data.curp, "i")
     if (data.curpStrict) filter.curp = data.curpStrict
-    if (data.age) {
-      data.age = parseInt(data.age)
-      filter.age = data.age
-    }
+    if (data.age !== undefined) filter.age = parseInt(data.age)
     let dbList = await db.collection(collection).find(filter).toArray()
     for (let item of dbList) delete item._id
     return dbList
@@ -47,7 +44,7 @@ class MongoPerson {
     if (data.age) data.age = parseInt(data.age)
     if (data.curp) data.curp = data.curp.toUpperCase()
     data.status = true
-    data.rentedBook = ""
+    data.rented_book = ""
     data.book_id = ""
     let dbList = await db.collection(collection).insertOne(data)
     return dbList
@@ -57,23 +54,11 @@ class MongoPerson {
     const filter = {}
     if (data.name) filter.name = data.name
     if (data.lastname) filter.lastname = data.lastname
-    if (data.statusRent) {
-      if (data.statusRent === 1) filter.status = false
-    }
-    if (data.statusReturn) {
-      if (data.statusReturn === 1) {
-        filter.status = true
-        filter.book_id = ""
-        filter.rentedBook = ""
-      }
-    }
+    if (data.status !== undefined) data.status === false ? filter.status = false : filter.status = true, filter.book_id = "", filter.rented_book = ""
     if (data.book_id) filter.book_id = data.book_id
     if (data.returnBook_id) filter.book_id = ""
-    if (data.age) {
-      data.age = parseInt(data.age)
-      filter.age = data.age
-    }
-    if (data.rentedBook) filter.rentedBook = data.rentedBook
+    if (data.age !== undefined) filter.age = parseInt(data.age)
+    if (data.rented_book) filter.rented_book = data.rented_book
     let dbList = await db.collection(collection).updateOne(curp, { $set: filter })
     return dbList
   }

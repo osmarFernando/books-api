@@ -9,6 +9,7 @@ const path = require("path")
 const csv = require("fast-csv")
 const { parse } = require("path")
 const { json } = require("body-parser")
+const { string } = require("joi")
 
 
 const storage = multer.diskStorage({
@@ -26,6 +27,13 @@ const upload = multer({
 })
 
 //joi validations
+const searchSchema = joi.object({
+    name: joi.string(),
+    curp: joi.string(),
+    lastname: joi.string(),
+    age: joi.number()
+})
+
 const createSchema = joi.object({
     name: joi.string().min(1).max(25).regex(/^[a-zA-Z]+$/).required().strict(),
     curp: joi.string().length(18).alphanum().required().strict(),
@@ -33,7 +41,7 @@ const createSchema = joi.object({
     age: joi.number().integer().min(15).max(100)
 })
 const updateSchema = joi.object({
-    curp: joi.string().min(18).max(18).alphanum().uppercase().strict(),
+    curp: joi.string().min(18).max(18).alphanum().required().uppercase().strict(),
     name: joi.string().regex(/^[a-zA-Z]+$/).message("name contain only letters").strict(),
     lastname: joi.string().regex(/^[a-zA-Z]+$/).message("lastname contain only letters"),
     age: joi.number().integer().min(15).max(100)
@@ -42,6 +50,8 @@ const updateSchema = joi.object({
 route.post("/", async (req, res, next) => {
     try {
         const { body } = req
+        const validate = searchSchema.validate(body)
+        if(validate.error) return res.status(400).send({message: validate.error.details[0].message })
         const search = await mongoPerson.searchPerson(body)
         if (search.length === 0) return res.status(404).json({ message: "person not found" })
         return res.status(200).json({ person: search, mesagge: "person retrived" })
@@ -115,7 +125,7 @@ route.put("/rent", async (req, res, next) => {
         if (book[0].avaible === 0) return res.status(400).json({ message: "book not aviable " })
         const countBook = book[0].avaible - 1
         await mongoBook.updateBook({ book_id: book[0].book_id }, { avaibleStrict: countBook })
-        await mongoPerson.updatePerson({ curp: body.curp }, { statusRent: 1, rentedBook: book[0].name, book_id: book[0].book_id })
+        await mongoPerson.updatePerson({ curp: body.curp }, { status: false, rented_book: book[0].name, book_id: book[0].book_id })
         return res.status(200).json({ message: "book rented succeful" })
     } catch (error) {
         console.log(error)
@@ -123,7 +133,7 @@ route.put("/rent", async (req, res, next) => {
     }
 })
 
-route.put("/returnBook", async (req, res, next) => {
+route.put("/return-book", async (req, res, next) => {
     try {
         const { body } = req
         const search = await mongoPerson.searchPerson({ curpStrict: body.curp })
@@ -133,7 +143,7 @@ route.put("/returnBook", async (req, res, next) => {
         const book = await mongoBook.searchBook({ book_id: body.book_id })
         const countBook = book[0].avaible + 1
         await mongoBook.updateBook({ book_id: book[0].book_id }, { avaibleStrict: countBook })
-        await mongoPerson.updatePerson({ curp: body.curp }, { statusReturn: 1 })
+        await mongoPerson.updatePerson({ curp: body.curp }, { status: 1 })
         return res.status(200).json({ message: "book returned" })
     } catch (error) {
         console.log(error)
